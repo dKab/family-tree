@@ -1,0 +1,16 @@
+html,
+body {
+  height: 100%;
+}
+#tree {
+  width: 100%;
+  height: 100%;
+}
+circle:hover {
+  stroke-width: 4;
+  stroke: blue;
+}
+text {
+  font-family: arial, sans-serif;
+  font-size: 12px;
+}

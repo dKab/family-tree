@@ -1,0 +1,11 @@
+{
+  "name": "family-tree",
+  "version": "0.1.0",
+  "dependencies": {
+    "bootstrap": "latest",
+    "font-awesome": "latest",
+    "angular": "latest",
+    "angular-route": "latest",
+    "d3": "~3.5.6"
+  }
+}
