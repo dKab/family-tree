@@ -1,15 +1,69 @@
+@import '../libs/bootstrap/less/bootstrap.less';
+
 html, body {
     height: 100%;
 }
 #tree {
     width: 100%;
     height: 100%;
-}
-circle:hover {
-    stroke-width: 4;
-    stroke: blue;
-}
-text {
-    font-family: arial, sans-serif;
-    font-size: 12px;
+
+    .node {
+        circle {
+            cursor: pointer;
+        }
+        .icon {
+            transition: opacity 0.1s ease-out;
+            opacity: 0;
+            //width: 0;
+            //height: 0;
+            visibility: hidden;
+            cursor: pointer;
+            &.man-woman-icon {
+                transition-delay: 0.3s;
+                fill: #bc414a;
+            }
+            &.tree-icon {
+                transition-delay: 0.35s;
+                fill: #009900;
+            }
+            &.cross-icon {
+                transition-delay: 0.4s;
+                fill: crimson;
+            }
+            &.edit-icon {
+                transition-delay: 0.45s;
+                fill: midnightblue;
+            }
+            &.eye-icon {
+                transition-delay: 0.5s;
+                fill: #2b81af;
+            }
+
+            &.edit-icon.fast-fade {
+                transition-delay: 0s;
+            }
+            &.cross-icon.fast-fade {
+                transition-delay: 0.05s;
+            }
+            &.tree-icon.fast-fade {
+                transition-delay: 0.1s;
+            }
+            &.man-woman-icon.fast-fade {
+                transition-delay: 0.15s;
+            }
+            &.eye-icon.fast-fade {
+                transition-delay: 0.2s;
+            }
+        }
+        text {
+            font-family: arial, sans-serif;
+            font-size: 12px;
+        }
+        &.active {
+            .icon {
+                visibility: visible;
+                opacity: 1;
+            }
+        }
+    }
 }
