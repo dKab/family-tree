@@ -17,7 +17,7 @@ angular.module('familyTree').controller('MainController',
                         .append('g')
                         .attr('id', function(d) { return 'node_' + d._id })
                         .attr('class', 'node')
-                        .attr('transform', function(d) {return 'translate(' + (+$('body').innerWidth()/2 - 10) +
+                        .attr('transform', function(d) {return 'translate(' + ((+$('#tree').innerWidth()-parseInt($('#tree').css('padding-left')))/2 - 10) +
                             ', ' + ((d.parents.length) ?  +parseInt(d3.select('#node_'
                                  + d.parents[0]).attr('transform').split(',').pop()) + 100 - 10 : 35) +  ')'})
                     var circleSmallRadius = 10,
@@ -46,62 +46,126 @@ angular.module('familyTree').controller('MainController',
                                 .attr('stroke', '#2b81af')
                         })
                     var iconHeight = 60
-                    groups.append('use')
+                    var rectIconSize = 20
+                    var treeIcon = groups.append('g').attr('class', 'icon tree-icon')
+                    treeIcon.append('rect')
+                        .attr('width', rectIconSize)
+                        .attr('height', rectIconSize)
+                        .attr('fill-opacity', 0)
+                        .attr('x', '0')
+                        .attr('y', '25')
+                    treeIcon.append('use')
                         .attr('xlink:href', 'icons.svg#icon-tree')
-                        .attr('class', 'icon tree-icon')
                         .attr('width', iconHeight + 5)
                         .attr('height', iconHeight)
                         .attr('x', '0')
                         .attr('y', '25')
-                    groups.append('use')
+                    treeIcon.append('title').text('Добавить прямого потомка')
+                    var manWomanIcon = groups.append('g').attr('class', 'icon man-woman-icon')
+                    manWomanIcon.append('rect')
+                        .attr('width', rectIconSize)
+                        .attr('height', rectIconSize)
+                        .attr('fill-opacity', 0)
+                        .attr('x', '-25')
+                        .attr('y', '3')
+                    manWomanIcon.append('use')
                         .attr('xlink:href', 'icons.svg#icon-man-woman')
-                        .attr('class', 'icon man-woman-icon')
                         .attr('width', iconHeight + 5)
                         .attr('height', iconHeight)
                         .attr('x', '-25')
                         .attr('y', '3')
-                    groups.append('use')
+                    manWomanIcon.append('title').text('Добавить супруга')
+                    var crossIcon = groups.append('g').attr('class', 'icon cross-icon')
+                    crossIcon.append('rect')
+                        .attr('width', rectIconSize)
+                        .attr('height', rectIconSize)
+                        .attr('fill-opacity', 0)
+                        .attr('x', '30')
+                        .attr('y', '3')
+                    crossIcon.append('use')
                         .attr('xlink:href', 'icons.svg#icon-cross')
-                        .attr('class', 'icon cross-icon')
                         .attr('width', iconHeight)
                         .attr('height', iconHeight)
                         .attr('x', '30')
                         .attr('y', '3')
-                    groups.append('use')
+                    crossIcon.append('title').text('Удалить узел')
+                    var eyeIcon = groups.append('g').attr('class', 'icon eye-icon')
+                    eyeIcon.append('rect')
+                        .attr('width', rectIconSize)
+                        .attr('height', rectIconSize)
+                        .attr('fill-opacity', 0)
+                        .attr('x', '0')
+                        .attr('y', '0')
+                    eyeIcon.append('use')
                         .attr('xlink:href', 'icons.svg#icon-eye')
-                        .attr('class', 'icon eye-icon')
                         .attr('width', iconHeight)
                         .attr('height', iconHeight)
                         .attr('x', '0')
                         .attr('y', '0')
-                    groups.append('use')
+                    eyeIcon.append('title').text('Детальный просмотр')
+                    var editIcon = groups.append('g').attr('class', 'icon edit-icon')
+                    editIcon.append('rect')
+                        .attr('width', rectIconSize)
+                        .attr('height', rectIconSize)
+                        .attr('fill-opacity', 0)
+                        .attr('x', '0')
+                        .attr('y', '-25')
+                    editIcon.append('use')
                         .attr('xlink:href', 'icons.svg#icon-edit')
-                        .attr('class', 'icon edit-icon')
                         .attr('width', iconHeight)
                         .attr('height', iconHeight)
                         .attr('x', '0')
                         .attr('y', '-25')
+                    editIcon.append('title').text('Редактировать информацию')
 
-                    d3.selectAll('.node use')
-                        .on('mouseleave', function(d) {
-                                var to = d3.event.toElement || d3.event.relatedTarget
-                                var toTag = to.nodeName
-                            if ( toTag != 'use' && toTag != 'circle') {
-                                var parentNode = $(this).closest('.node')[0]
-                                d3.select(parentNode).classed('active', false)
-                                d3.select(parentNode).select('circle').transition().duration(500).attr('r', circleSmallRadius)
-                            }
-                        })
+                    d3.selectAll('.node').on('click', function(d) {
+                        $scope.focusedNode = d
+                        var target = d3.event.target || d3.event.explicitOriginalTarget
+                        var circle = $(this).find('circle')[0]
+                        if ($(target).is('.tree-icon') || $(target).closest('g').is('.tree-icon')) {
+                            $timeout( function() {
+                                $('#addChild').modal()
+                                shrinkCircle.call(circle)
+                            }, 10)
+                        }
+                    })
+                    d3.selectAll('.node rect').on('mouseleave', function(d) {
+                        var to = d3.event.toElement || d3.event.relatedTarget
+                        var circle = $(this).closest('.node').find('circle')[0]
+                        if (to && (to.nodeName == 'path' || to.nodeName == 'use' || to.nodeName == 'rect' || to === circle) ) { //don't shrink circle if mouse went to child element
+                            return
+                        } //otherwise shrink it
+                        shrinkCircle.call(circle)
+                    })
+                    var shrinkCircle = function () {
+                        var parentNode = $(this).closest('.node')[0]
+                        $timeout(function() {
+                            d3.select(parentNode).classed('active', false)
+                            d3.select(parentNode).selectAll('.icon')
+                                .style('opacity', null)
+                                .classed('fast-fade', false)
+                        },500)
+                        var promise = $(this).data('promise')
+                        if ( promise !== undefined ) {
+                            $timeout.cancel(promise)
+                        }
+                        d3.select(parentNode).selectAll('.icon').style('opacity', 0)
+                        d3.select(this).transition().duration(500).attr('r', circleSmallRadius).attr('stroke-width', 4)
+                    }
                     d3.selectAll('circle')
                         .on('mouseenter', function(d) {
                             var _this = this
                             var from = d3.event.fromElement || d3.event.relatedTarget
-                            if (from.nodeName != 'use' && from.nodeName != 'path') {
+                            if (from.nodeName != 'use' && from.nodeName != 'path' || from.nodeName != 'rect') {
+                                var promiseOld = $(this).data('promise')
+                                if (promiseOld !== undefined) {
+                                    $timeout.cancel(promiseOld)
+                                }
                                 var promise = $timeout(function() {
                                     var parentNode = $(_this).closest('.node')[0]
                                     d3.select('.node.active').classed('active', false)
                                     d3.select(parentNode).classed('active', true)
-                                    d3.select(_this).transition().duration(500).attr('r', circleBigRadius)
+                                    d3.select(_this).transition().duration(500).attr('r', circleBigRadius).attr('stroke-width', 2)
                                     $timeout(function() {
                                         d3.select(parentNode).selectAll('.icon').classed('fast-fade', true)
                                     }, 500)
@@ -110,24 +174,11 @@ angular.module('familyTree').controller('MainController',
                             }
                         })
                         .on('mouseleave', function(d) {
-                            var _this = this
                             var to = d3.event.toElement || d3.event.relatedTarget
-                            if (to && (to.nodeName == 'path' || to.nodeName == 'use') ) { //don't shrink circle if mouse went to child element
+                            if (to && (to.nodeName == 'path' || to.nodeName == 'use' || to.nodeName == 'rect') ) {
                                 return
                             } //otherwise shrink it
-                            var parentNode = $(_this).closest('.node')[0]
-                            $timeout(function() {
-                                d3.select(parentNode).classed('active', false)
-                                d3.select(parentNode).selectAll('.icon')
-                                    .style('opacity', null)
-                                    .classed('fast-fade', false)
-                            },500)
-                            var promise = $(this).data('promise')
-                            if ( promise !== undefined ) {
-                                $timeout.cancel(promise)
-                            }
-                            d3.select(parentNode).selectAll('.icon').style('opacity', 0)
-                            d3.select(_this).transition().duration(500).attr('r', circleSmallRadius)
+                            shrinkCircle.call(this)
                         })
         }).error(function(data, status, headers) {
             $scope.err = status
