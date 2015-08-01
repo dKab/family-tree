@@ -119,7 +119,6 @@ angular.module('familyTree').controller('MainController',
                     editIcon.append('title').text('Редактировать информацию')
 
                     d3.selectAll('.node').on('click', function(d) {
-                        $scope.focusedNode = d
                         var target = d3.event.target || d3.event.explicitOriginalTarget
                         var circle = $(this).find('circle')[0]
                         if ($(target).is('.tree-icon') || $(target).closest('g').is('.tree-icon')) {
@@ -128,6 +127,8 @@ angular.module('familyTree').controller('MainController',
                                 shrinkCircle.call(circle)
                             }, 10)
                         }
+                    }).on('mouseover', function(d) {
+                        $scope.focusedNode = d
                     })
                     d3.selectAll('.node rect').on('mouseleave', function(d) {
                         var to = d3.event.toElement || d3.event.relatedTarget
@@ -168,7 +169,8 @@ angular.module('familyTree').controller('MainController',
                                     d3.select(_this).transition().duration(500).attr('r', circleBigRadius).attr('stroke-width', 2)
                                     $timeout(function() {
                                         d3.select(parentNode).selectAll('.icon').classed('fast-fade', true)
-                                    }, 500)
+                                        d3.select(parentNode).classed('active', true)
+                                    }, 300)
                                 }, 250);
                                 $(this).data('promise', promise)
                             }

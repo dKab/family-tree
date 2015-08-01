@@ -6832,3 +6832,6 @@ body {
   visibility: visible;
   opacity: 1;
 }
+.mr {
+  margin-right: 19px;
+}
