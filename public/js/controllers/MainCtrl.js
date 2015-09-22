@@ -2,14 +2,23 @@
  * Created by dmitriy on 20.07.2015.
  */
 angular.module('familyTree').controller('MainController',
-    ["IndividualsService", "$scope", "$timeout",
-        function(IndividualsService,  $scope, $timeout) {
+    ["IndividualsService", "$scope", "$timeout", 'FileUploader', 'TreeRendererService',
+        function(IndividualsService,  $scope, $timeout, FileUploader, Renderer) {
+            $scope.uploader = new FileUploader();
             $scope.people = []
             $scope.err = null
             $scope.loadPeople = function() {
                 $scope.people =  IndividualsService.get().success(function(data) {
                     $scope.people = data
-                    var tree = d3.select('#tree')
+                    var tree = d3.select('#tree'),
+                        circleSmallRadius = Renderer.nodeRadius,
+                        circleBigRadius = 42
+                    var root = _.find($scope.people, function(individual) {
+                        return individual.parents.length === 0
+                    })
+                        root.xCoord = 200
+                        root.yCoord = 50
+                        var successTreeBuild =  Renderer.positionTree(root, $scope.people)
                     var groups = tree
                         .selectAll('g')
                         .data(data)
@@ -17,11 +26,7 @@ angular.module('familyTree').controller('MainController',
                         .append('g')
                         .attr('id', function(d) { return 'node_' + d._id })
                         .attr('class', 'node')
-                        .attr('transform', function(d) {return 'translate(' + ((+$('#tree').innerWidth()-parseInt($('#tree').css('padding-left')))/2 - 10) +
-                            ', ' + ((d.parents.length) ?  +parseInt(d3.select('#node_'
-                                 + d.parents[0]).attr('transform').split(',').pop()) + 100 - 10 : 35) +  ')'})
-                    var circleSmallRadius = 10,
-                        circleBigRadius = 42
+                        .attr('transform', function(d) { return 'translate(' + d.xCoord + ', ' + d.yCoord + ')' })
                     groups.append('circle')
                         .attr('stroke-width', 4)
                         .attr('stroke', '#2b81af')
@@ -125,6 +130,9 @@ angular.module('familyTree').controller('MainController',
                             $timeout( function() {
                                 $('#addChild').modal()
                                 shrinkCircle.call(circle)
+                                $scope.focusedNode.child = {
+                                    gender: 'male'
+                                }
                             }, 10)
                         }
                     }).on('mouseover', function(d) {
@@ -177,14 +185,85 @@ angular.module('familyTree').controller('MainController',
                         })
                         .on('mouseleave', function(d) {
                             var to = d3.event.toElement || d3.event.relatedTarget
-                            if (to && (to.nodeName == 'path' || to.nodeName == 'use' || to.nodeName == 'rect') ) {
+                            if (to && ('path' == to.nodeName || 'use' ==  to.nodeName || 'rect' == to.nodeName ) ) {
                                 return
                             } //otherwise shrink it
                             shrinkCircle.call(this)
                         })
-        }).error(function(data, status, headers) {
-            $scope.err = status
-        })
-    }
+                }).error(function(data, status, headers) {
+                    $scope.err = status
+                })
+            }
+
+            $scope.triggerRedrawCanvas = function() {
+                console.log('redraw')
+            }
+
+            $scope.addChild = function() {
+                //TODO добавлять ребенка в массив children родителям
+                var parent = $scope.focusedNode,
+                    child = parent.child, otherParentId
+                if (otherParentId = child.otherParent._id) {
+                    child.parents.push(otherParentId)
+                } else if (child.otherParent.name && child.otherParent.name.first) {
+                    var otherParent = child.otherParent
+                    otherParent.gender = 'male' == parent.gender ? 'female' : 'male'
+                    otherParent.partners = [parent._id]
+                    child.parents = [parent._id]
+                    IndividualsService.add(otherParent)
+                        .then(function (response) {
+                            if (response.message == 'OK') {
+                                otherParentId = response.added._id
+                                child.parents.push(otherParentId)
+                                if (Array.isArray(parent.partners)) {
+                                    parent.partners.push(otherParentId)
+                                } else {
+                                    parent.partners = [otherParentId]
+                                }
+                                $scope.people.push(response.added)
+                                return IndividualsService.update(parent._id, { partners:  parent.partners })
+                            } else if (response.error) {
+                                throw 'Ошибка при создании второго родителя: ' + response.error
+                            }
+                        })
+                        .then(function(response) {
+                            if ('OK' == response.message ) {
+                                return IndividualsService.add(child)
+                            } else if (response.error) {
+                                throw 'Ошибка при попытке привязать второго родителя к первому как супруга: '
+                                + response.error
+                            }
+                        })
+                        .then(function(response) {
+                            if ('OK' == response.message) {
+                                $scope.people.push(response.added)
+                            } else if (response.error) {
+                                throw 'Ошибка при создании ребенка: ' + response.error
+                            }
+                        })
+                        .catch(function(error) {
+                            /**
+                             * TODO: clean up (maybe remove created otherParent if failed to created child)
+                             */
+                            alert(error);
+                        })
+                        .finally(function() {
+                            $('#addChild').modal('hide')
+                            $scope.triggerRedrawCanvas()
+                        })
+
+                    //delete child.otherParent
+                    //child.
+                    //IndividualsService.add(child)
+                }
+
+
+                IndividualsService.add($scope.focusedNode.child, function(res) {})
+            }
+            //$scope.addPartner = function(to, partner) {
+            //
+            //}
+
+
     $('#tree').ready($scope.loadPeople)
 }]);

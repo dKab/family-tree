@@ -12,6 +12,8 @@
     <script src="libs/angular-route/angular-route.js"></script>
     <script src="libs/d3/d3.js"></script>
     <script src="libs/bootstrap/dist/js/bootstrap.js"></script>
+    <script src="libs/angular-file-upload/dist/angular-file-upload.min.js"></script>
+    <script src="libs/lodash/lodash.js"></script>
     <!-- endbower -->
     <!-- TODO Чтобы внешние svg файлы работали в IE < 11 надо как-то запариться (https://css-tricks.com/svg-use-external-source/)-->
     <script type="text/xml" src="icons.svg"></script>
@@ -27,27 +29,35 @@
                 <h4 class="modal-title" id="addChildLabel">{{ focusedNode.name.first }} {{ focusedNode.name.last }} - Добавление прямого потомка</h4>
             </div>
             <div class="modal-body">
-                {{ focusedNode | json }}
-                <form>
+                {{ focusedNode.child | json }}
+                <form name="newIndividual">
                     <div class="form-horizontal">
-                        <div class="form-group">
+                        <div ng-class="{'form-group': true, 'has-error': newIndividual.firstName.$error.required && newIndividual.firstName.$touched }">
                             <label for="firstName" class="col-sm-2 control-label">Имя</label>
                             <div class="col-sm-10">
-                                <input type="text" id="firstName" name="firstName" class="form-control"/>
+                                <input type="text" ng-required="true" name="firstName" id="firstName" ng-model="focusedNode.child.name.first"  class="form-control"/>
+                                <span class="error" ng-show="newIndividual.firstName.$error.required && newIndividual.firstName.$touched">Это поле обязательно для заполнения</span>
                             </div>
                         </div>
                         <div class="form-group">
                             <label for="middleName" class="col-sm-2 control-label">Отчество</label>
-                            <div class="col-sm-10"><input type="text" id="middleName" name="middleName" class="form-control"/></div>
+                            <div class="col-sm-10">
+                                <input type="text" id="middleName" ng-model="focusedNode.child.name.middle" class="form-control"/>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label for="lastName" class="col-sm-2 control-label">Фамилия</label>
-                            <div class="col-sm-10"><input type="text"  id="lastName" name="lastName" class="form-control"/></div>
+                            <div class="col-sm-10">
+                                <input type="text"  id="lastName" ng-model="focusedNode.child.name.last"  class="form-control"/>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label for="otherParent" class="col-sm-2 control-label">{{ focusedNode.gender == 'male' ? 'Мать' : 'Отец' }}</label>
-                            <div class="col-sm-10">
-                                <input name="otherParent" id="otherParent" placeholder="ФИО" type="text" class="form-control"/>
+                            <div class="col-sm-5">
+                                <input id="otherParent" ng-model="focusedNode.child.otherParent.name.first" placeholder="Имя" type="text" class="form-control"/>
+                            </div>
+                            <div class="col-sm-5">
+                                <input type="text" ng-model="focusedNode.child.otherParent.name.last" placeholder="Фамилия" class="form-control"/>
                             </div>
                         </div>
                     </div>
@@ -56,29 +66,43 @@
                             <label class="control-label">Пол</label>
                         </div>
                         <label class="radio-inline">
-                            <input type="radio" name="gender"  value="male"> Мужской
+                            <input ng-model="focusedNode.child.gender" type="radio"  value="male"> Мужской
                         </label>
                         <label class="radio-inline mr">
-                            <input type="radio" name="gender"  value="female"> Женский
+                            <input ng-model="focusedNode.child.gender" type="radio"  value="female"> Женский
                         </label>
                         <div class="form-group">
                             <label class="control-label">Дата рождения</label>
                         </div>
                         <div class="form-group">
-                            <input type="text" name="birthDay" placeholder="День" id="birthDay" size="2"  class="form-control"/>
+                            <input type="text" ng-model="focusedNode.child.events.birth.day" placeholder="День" id="birthDay" size="2"  class="form-control"/>
                         </div>
                         <div class="form-group">
-                            <input type="text" name="birthMonth" placeholder="Месяц" id="birthMonth" size="2" class="form-control" />
+                            <input type="text" ng-model="focusedNode.child.events.birth.month" placeholder="Месяц" id="birthMonth" size="2" class="form-control" />
                         </div>
                         <div class="form-group">
-                            <input type="text" name="birthYear" placeholder="Год" id="birthYear" size="4" class="form-control" />
+                            <input type="text" ng-model="focusedNode.child.events.birth.year" placeholder="Год" id="birthYear" size="4" class="form-control" />
                         </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="picture"></label>
+                        <input type="file" nv-file-select id="picture" uploader="uploader"/><br/>
+                        <ul>
+                            <li ng-repeat="item in uploader.queue">
+                                Name: <span ng-bind="item.file.name"></span><br/>
+                                <button ng-click="item.upload()">upload</button>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="form-group">
+                        <label for="info" class="control-label">Информация</label>
+                        <textarea class="form-control" rows="3" id="info" ng-model="focusedNode.child.info"></textarea>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Закрыть</button>
-                <button type="button" class="btn btn-primary">Сохранить</button>
+                <button type="button" ng-disabled="newIndividual.$invalid" ng-click="addChild()" class="btn btn-primary">Сохранить</button>
             </div>
         </div>
     </div>
@@ -94,7 +118,7 @@
 {{ people | json }}
 <div ng-show="err">Ошибка!</div>
 <script type="text/javascript" src="js/app.js"></script>
-<script type="text/javascript" src="js/services/UtilService.js"></script>
+<script type="text/javascript" src="js/services/TreeRendererService.js"></script>
 <script type="text/javascript" src="js/services/IndividualsService.js"></script>
 <script type="text/javascript" src="js/controllers/MainCtrl.js"></script>
 </body>

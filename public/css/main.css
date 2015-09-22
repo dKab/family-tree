@@ -6835,3 +6835,6 @@ body {
 .mr {
   margin-right: 19px;
 }
+.error {
+  color: #a94442;
+}
