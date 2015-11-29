@@ -1,7 +1,7 @@
 /**
  * Created by dmitriy on 19.07.2015.
  */
-var mongoose = require('mongoose')
+var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 var schema = new Schema({
     name : {
@@ -20,5 +20,5 @@ var schema = new Schema({
     partners: [Schema.Types.ObjectId],
     generation: {type: Number, required: true},
     children: [Schema.Types.ObjectId] //fuck normalization! I need this
-})
-module.exports = mongoose.model('Individual', schema)
+}, { collection : 'individuals' });
+module.exports = mongoose.model('Individual', schema);

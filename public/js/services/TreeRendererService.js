@@ -180,7 +180,7 @@ angular.module('familyTree').factory('TreeRendererService', function() {
     }
 
     function hasRightSibling(node) {
-        //TODO учесть супругов
+        //TODO СѓС‡РµСЃС‚СЊ СЃСѓРїСЂСѓРіРѕРІ
         if (!node.parents || node.parents.length === 0) {
             return false
         }

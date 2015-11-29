@@ -6,7 +6,7 @@
     "angular-route": "latest",
     "d3": "~3.5.6",
     "bootstrap": "~3.3.5",
-    "angular-file-upload": "~1.2.0",
+    "angular-file-upload": "latest",
     "lodash": "~3.10.1"
   }
 }

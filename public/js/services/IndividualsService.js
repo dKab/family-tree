@@ -9,6 +9,9 @@ angular.module('familyTree').factory('IndividualsService', ['$http', function($h
             return $http.get('/api/individuals')
         },
         add: function(individual) {
+            if (individual.hasOwnProperty('isDeadAlready')) {
+                delete individual.isDeadAlready;
+            }
             return $http.post('/api/add-individual', individual)
         },
         update: function(id, update) {
